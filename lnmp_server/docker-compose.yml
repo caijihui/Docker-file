@@ -1,0 +1,48 @@
+version: "3"
+services:
+  php:
+    build:
+      context: ./system/php
+      dockerfile: Dockerfile
+    volumes:
+      - ./www:/www/html/app
+    ports:
+      - "9000:9000"
+    restart: always
+    env_file:
+      - '.env'
+    environment:
+      ENV: "app_env=${ENV}"
+    container_name: "web-php"
+  nginx:
+    image: nginx:1.15.2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "30"
+    ports:
+      - "8089:80"
+    restart: always
+    depends_on:
+      - php
+    links:
+      - php
+    volumes:
+      - ./system/nginx/conf.d:/etc/nginx/conf.d
+      - ./system/nginx/logs:/etc/nginx/logs
+      - ./www:/www/html/app
+    container_name: "web-nginx"
+  mysql:
+     image: mysql:5.7
+     environment:
+          MYSQL_ROOT_PASSWORD: "root"
+          MYSQL_DATABASE: "test"
+          MYSQL_USER: "root"
+          MYSQL_PASSWORD: "root"
+     volumes:
+          - ./system/mysql/data:/var/lib/mysql
+     ports:
+          - "3306:3306"
+     restart: always
+     container_name: "web-mysql"
